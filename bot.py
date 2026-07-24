@@ -1,13 +1,8 @@
-from flask import Flask
 import os
-import requests
 import telebot
-import threading
 
-app = Flask(__name__)
-
-TOKEN = "8785982545:AAGdwcIWX11tyBu4ccmuzaMFG5FruTt3bc"
-bot = telebot.TeleBot(TOKEN)
+TOKEN = os.getenv("BOT_TOKEN")
+bot = telebot.TeleBot(8785982545:AAH1R4BLIw4qhPlQ-UCr47BLN9tIIGRTJ-U)
 
 
 @bot.message_handler(commands=["start"])
