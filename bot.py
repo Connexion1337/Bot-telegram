@@ -4,10 +4,8 @@ from flask import Flask
 import requests
 import telebot
 
-# Inicializamos Flask para que Render mantenga el servicio web activo
 app = Flask(__name__)
 
-# Toma el token de forma segura desde las variables de entorno de Render
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
@@ -20,7 +18,7 @@ def home():
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   nombre = message.from_user.first_name
-  texto_bienvenida = f"👋 **¡Hola, {nombre}! Bienvenido al bot.**\n\nPronto tendremos mas funciones sobre cada pais Arg,peru etc,usa /menu para ver los comandos disponibles."
+  texto_bienvenida = f"👋 **¡Hola, {nombre}! Bienvenido al bot.**\n\nUsa `/menu` para ver los comandos disponibles."
   bot.reply_to(message, texto_bienvenida, parse_mode="Markdown")
 
 
@@ -29,7 +27,7 @@ def show_menu(message):
   texto = (
       "🛠 **MENÚ DE HERRAMIENTAS OSINT** 🛠\n\n"
       "Comandos disponibles:\n"
-      "📍 `/ip [Direccion IP]` - Dossier OSINT completo de una IP.\n"
+      "📍 `/ip [Direccion IP]` - Dossier OSINT máximo y total de una IP.\n"
       "📋 `/menu` - Muestra esta lista de comandos."
   )
   bot.reply_to(message, texto, parse_mode="Markdown")
@@ -39,65 +37,92 @@ def show_menu(message):
 def consultar_ip(message):
   args = message.text.split()
   if len(args) < 2:
-    bot.reply_to(
-        message,
-        "⚠️ Ingresa una IP válida. Ejemplo: `/ip 8.8.8.8`",
-        parse_mode="Markdown",
-    )
+    bot.reply_to(message, "⚠️ Ingresa una IP válida. Ejemplo: `/ip 8.8.8.8`")
     return
 
   ip_objetivo = args[1]
 
   try:
-    url = f"https://api.ipapi.is/?q={ip_objetivo}"
-    response = requests.get(url, timeout=10)
+    # Solicitud con absolutamente todos los campos permitidos por la red
+    url = f"http://ip-api.com/json/{ip_objetivo}?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query"
+    response = requests.get(url, timeout=5)
     data = response.json()
 
-    if "error" in data:
+    if data.get("status") == "fail":
       bot.reply_to(
           message,
-          f"❌ No se pudo obtener información: {data.get('error', 'Desconocido')}",
+          f"❌ No se pudo obtener información: {data.get('message', 'Desconocido')}",
       )
       return
 
-    ubicacion = data.get("location", {})
-    empresa = data.get("company", {})
-    asn = data.get("asn", {})
-    tipo_red = data.get("is", {})
-    abuse = data.get("abuse", {})
+    # Extracción total de cada variable
+    ip_res = data.get("query", ip_objetivo)
+    continente = data.get("continent", "N/A")
+    codigo_cont = data.get("continentCode", "N/A")
+    pais = data.get("country", "N/A")
+    codigo_pais = data.get("countryCode", "N/A")
+    region_codigo = data.get("region", "N/A")
+    region_nombre = data.get("regionName", "N/A")
+    ciudad = data.get("city", "N/A")
+    distrito = data.get("district", "N/A")
+    codigo_postal = data.get("zip", "N/A")
+    latitud = data.get("lat", "N/A")
+    longitud = data.get("lon", "N/A")
+    zona_horaria = data.get("timezone", "N/A")
+    desplazamiento = data.get("offset", "N/A")
+    moneda = data.get("currency", "N/A")
+    isp = data.get("isp", "N/A")
+    org = data.get("org", "N/A")
+    asn = data.get("as", "N/A")
+    as_nombre = data.get("asname", "N/A")
+    reverse_dns = data.get("reverse", "N/A")
 
-    respuesta = (
-        f"🕵️‍♂️ DOSSIER OSINT COMPLETO DE IP: {ip_objetivo}\n\n"
-        f"🌍 UBICACIÓN GEOGRÁFICA:\n"
-        f"🏳️ País: {ubicacion.get('country', 'N/A')} ({ubicacion.get('country_code', 'N/A')})\n"
-        f"🏙️ Estado / Región: {ubicacion.get('state', 'N/A')}\n"
-        f"🏘️ Ciudad: {ubicacion.get('city', 'N/A')}\n"
-        f"📮 Código Postal: {ubicacion.get('zip', 'N/A')}\n"
-        f"⏰ Zona Horaria: {ubicacion.get('timezone', 'N/A')}\n"
-        f"📍 Coordenadas: {ubicacion.get('latitude', 'N/A')}, {ubicacion.get('longitude', 'N/A')}\n"
-        f"☀️ ¿Es de día/noche?: {'Noche 🌙' if ubicacion.get('is_dst') else 'Día ☀️'}\n\n"
-        f"🏢 INFRAESTRUCTURA Y RED:\n"
-        f"📡 Nombre de la Compañía: {empresa.get('name', 'N/A')}\n"
-        f"🌐 Dominio Web: {empresa.get('domain', 'N/A')}\n"
-        f"🔌 Tipo de Red (Route): {asn.get('route', 'N/A')}\n"
-        f"🔢 ASN (Autonomous System): AS{asn.get('asn', 'N/A')}\n"
-        f"🏛️ Organización del AS: {asn.get('org', 'N/A')}\n\n"
-        f"🛡️ SEGURIDAD Y ANONIMATO:\n"
-        f"🔹 ¿Es VPN?: {'Sí ⚠️' if tipo_red.get('vpn') else 'No ✅'}\n"
-        f"🔹 ¿Es Proxy?: {'Sí ⚠️' if tipo_red.get('proxy') else 'No ✅'}\n"
-        f"🔹 ¿Es Red Tor?: {'Sí ⚠️' if tipo_red.get('tor') else 'No ✅'}\n"
-        f"🔹 ¿Es Datacenter / Hosting?: {'Sí (Servidor Cloud)' if tipo_red.get('datacenter') else 'No (Conexión Residencial/Móvil)'}\n"
-        f"🔹 ¿Es Abusiva / Reportada?: {'Sí 🚨' if tipo_red.get('abuser') else 'No (Limpia) ✅'}\n\n"
-        f"📞 CONTACTO DE ABUSOS (ISP):\n"
-        f"📧 Email: {abuse.get('email', 'N/A')}\n"
-        f"☎️ Teléfono: {abuse.get('phone', 'N/A')}"
+    es_movil = (
+        "Sí 📱 (Red Celular / Móvil)"
+        if data.get("mobile")
+        else "No (Red Fija / Cable) 💻"
+    )
+    es_proxy = (
+        "Sí ⚠️ (VPN, Proxy o Tor detectado)"
+        if data.get("proxy")
+        else "No ✅ (Conexión limpia)"
+    )
+    es_hosting = (
+        "Sí ☁️ (Servidor / Datacenter / Cloud)"
+        if data.get("hosting")
+        else "No (Conexión Residencial o de Usuario)"
     )
 
-    # Enviado sin parse_mode para evitar errores de sintaxis de Telegram
-    bot.reply_to(message, respuesta)
+    respuesta = (
+        f"🚨 [DOSSIER OSINT MÁXIMO GLOBAL] 🚨\n"
+        f"IP OBJETIVO: `{ip_res}`\n\n"
+        f"🌍 1. UBICACIÓN GEOGRÁFICA Y ESPACIAL:\n"
+        f"🌐 Continente: {continente} ({codigo_cont})\n"
+        f"🏳️ País: {pais} ({codigo_pais})\n"
+        f"🗺️ Región / Provincia: {region_nombre} (Código: {region_codigo})\n"
+        f"🏙️ Ciudad: {ciudad}\n"
+        f"🏘️ Distrito / Localidad: {distrito}\n"
+        f"📮 Código Postal: {codigo_postal}\n"
+        f"📍 Coordenadas GPS: {latitud}, {longitud}\n\n"
+        f"⏰ 2. ENTORNO, TIEMPO Y ECONOMÍA:\n"
+        f"⌛ Zona Horaria: {zona_horaria} (Offset temporal: {desplazamiento})\n"
+        f"💵 Moneda oficial: {moneda}\n\n"
+        f"🏢 3. INFRAESTRUCTURA Y RED PROFUNDA:\n"
+        f"📡 Proveedor de Internet (ISP): {isp}\n"
+        f"🏛️ Organización Titular: {org}\n"
+        f"🔢 Sistema Autónomo (ASN completo): {asn}\n"
+        f"🏷️ Nombre del AS: {as_nombre}\n"
+        f"🔗 DNS Inverso (Hostname): {reverse_dns}\n\n"
+        f"🛡️ 4. SEGURIDAD, DISPOSITIVO Y TIPO DE NODO:\n"
+        f"📱 Tipo de Red: {es_movil}\n"
+        f"⚠️ Estado de Anonimato: {es_proxy}\n"
+        f"☁️ Infraestructura de Servidor: {es_hosting}"
+    )
+
+    bot.reply_to(message, respuesta, parse_mode="Markdown")
 
   except Exception as e:
-    bot.reply_to(message, f"❌ Ocurrió un error al consultar la IP: {str(e)}")
+    bot.reply_to(message, f"❌ Ocurrió un error al procesar la IP: {str(e)}")
 
 
 def run_bot():
@@ -110,4 +135,3 @@ if __name__ == "__main__":
 
   port = int(os.environ.get("PORT", 5000))
   app.run(host="0.0.0.0", port=port)
-
