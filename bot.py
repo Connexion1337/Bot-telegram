@@ -3,6 +3,7 @@ import threading
 from flask import Flask
 import requests
 import telebot
+from telebot.types import BotCommand
 
 app = Flask(__name__)
 
@@ -18,7 +19,7 @@ def home():
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   nombre = message.from_user.first_name
-  texto_bienvenida = f"👋 ¡Hola, {nombre}! Bienvenido al bot.\n\nUsa /menu para ver los comandos disponibles, pronto vamos a agregar funciones de argentina. ."
+  texto_bienvenida = f"👋 ¡Hola, {nombre}! Bienvenido al bot.\n\nUsa el menu para ver los comandos disponibles pronto agregremos funciones de arg."
   bot.reply_to(message, texto_bienvenida)
 
 
@@ -43,7 +44,6 @@ def consultar_ip(message):
   ip_objetivo = args[1]
 
   try:
-    # Usamos ipwho.is que es totalmente abierta y nunca falla
     url = f"https://ipwho.is/{ip_objetivo}"
     response = requests.get(url, timeout=6)
     data = response.json()
@@ -110,7 +110,17 @@ def consultar_ip(message):
     bot.reply_to(message, f"❌ Ocurrió un error de conexión: {str(e)}")
 
 
+def configurar_menu():
+  # Aquí defines qué comandos aparecen en el menú desplegable de Telegram
+  comandos = [
+      BotCommand("ip", "Búsqueda IP (gratis)"),
+      BotCommand("menu", "Muestra el menú de herramientas"),
+  ]
+  bot.set_my_commands(comandos)
+
+
 def run_bot():
+  configurar_menu()
   bot.infinity_polling()
 
 
