@@ -1,0 +1,62 @@
+import telebot
+import requests
+
+TOKEN = "8785982545:AAGdwcIwX11tyBu4ccmuzaMFGS5fRuTt3bc"
+bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    texto = (
+        "👋 **¡Hola, bienvenido al bot CobardSint.**\n\nPronto agregaremos más comandos de consultas sobre Argentina y más países, mientras tanto usa los comandos disponibles! Usa  /menu para ver los comandos."
+
+    )
+    bot.reply_to(message, texto, parse_mode='Markdown')
+
+@bot.message_handler(commands=['menu', 'help'])
+def show_menu(message):
+    texto = (
+        "🛠️ *MENÚ DE HERRAMIENTAS OSINT* 🛠️\n\n"
+        "Comandos disponibles:\n\n"
+        "📍 */ip [Direccion IP]* - Geolocaliza y obtiene datos de una IP.\n"
+        "📋 */menu* - Muestra esta lista de comandos."
+    )
+    bot.reply_to(message, texto, parse_mode='Markdown')
+
+@bot.message_handler(commands=['ip'])
+def track_ip(message):
+    try:
+        ip = message.text.split()[1]
+        bot.reply_to(message, f"Buscando rastros de {ip}...")
+        
+        url = f'http://ip-api.com/json/{ip}'
+        response = requests.get(url).json()
+        
+        if response['status'] == 'success':
+            info = (
+                f"🔍 **Resultados para {ip}**\n\n"
+                f"📍 **País:** {response['country']}\n"
+                f"🏙️ **Ciudad:** {response['city']}\n"
+                f"🏢 **ISP/Organización:** {response['isp']}\n"
+                f"🗺️ **Coordenadas:** {response['lat']}, {response['lon']}"
+            )
+            bot.reply_to(message, info, parse_mode='Markdown')
+        else:
+            bot.reply_to(message, "❌ No se pudo obtener información. Verifica que la IP sea válida.")
+            
+    except IndexError:
+        bot.reply_to(message, "⚠️ Uso correcto: `/ip 8.8.8.8`", parse_mode='Markdown')
+    except Exception as e:
+        bot.reply_to(message, f"Ocurrió un error inesperado: {e}")
+
+print("Bot iniciando operaciones...")
+# Comando /start (Mensaje de bienvenida)
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    nombre = message.from_user.first_name
+    texto_bienvenida = f"👋 **¡Hola, {nombre}! Bienvenido al bot.**\n\nPronto agregaremos más comandos sobre Argentina y más países."
+    
+    bot.reply_to(message, texto_bienvenida, parse_mode="Markdown")
+
+
+bot.infinity_polling()
+
