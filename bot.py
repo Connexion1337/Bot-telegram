@@ -18,7 +18,7 @@ def home():
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   nombre = message.from_user.first_name
-  texto_bienvenida = f"👋 ¡Hola, {nombre}! Bienvenido al bot.\n\nUsa /menu para ver los comandos disponibles."
+  texto_bienvenida = f"👋 ¡Hola, {nombre}! Bienvenido al bot.\n\nUsa /menu para ver los comandos disponibles, pronto vamos a agregar funciones de argentina. ."
   bot.reply_to(message, texto_bienvenida)
 
 
@@ -43,32 +43,44 @@ def consultar_ip(message):
   ip_objetivo = args[1]
 
   try:
-    # Usamos ipapi.co que es sumamente estable en servidores en la nube
-    url = f"https://ipapi.co/{ip_objetivo}/json/"
-    response = requests.get(
-        url, timeout=6, headers={"User-Agent": "Mozilla/5.0"}
-    )
+    # Usamos ipwho.is que es totalmente abierta y nunca falla
+    url = f"https://ipwho.is/{ip_objetivo}"
+    response = requests.get(url, timeout=6)
     data = response.json()
 
-    if "error" in data:
+    if not data.get("success"):
       bot.reply_to(
           message,
-          f"❌ No se pudo obtener información: {data.get('reason', 'IP inválida')}",
+          f"❌ No se pudo obtener información: {data.get('message', 'IP inválida')}",
       )
       return
 
     ip_res = data.get("ip", ip_objetivo)
-    pais = data.get("country_name", "N/A")
+    pais = data.get("country", "N/A")
     codigo_pais = data.get("country_code", "N/A")
     region = data.get("region", "N/A")
     ciudad = data.get("city", "N/A")
     codigo_postal = data.get("postal", "N/A")
     latitud = data.get("latitude", "N/A")
     longitud = data.get("longitude", "N/A")
-    zona_horaria = data.get("timezone", "N/A")
-    moneda = data.get("currency", "N/A")
-    isp = data.get("org", "N/A")
-    asn = data.get("asn", "N/A")
+    zona_horaria = data.get("timezone", {}).get("id", "N/A")
+    moneda = data.get("currency", {}).get("code", "N/A")
+    isp = data.get("connection", {}).get("isp", "N/A")
+    asn = data.get("connection", {}).get("asn", "N/A")
+    org = data.get("connection", {}).get("org", "N/A")
+
+    conexion_tipo = data.get("type", "N/A")
+    seguridad_vpn = (
+        "Sí (VPN/Proxy detectado)"
+        if data.get("security", {}).get("vpn")
+        or data.get("security", {}).get("proxy")
+        else "No (Conexión limpia)"
+    )
+    seguridad_hosting = (
+        "Sí (Datacenter / Servidor)"
+        if data.get("security", {}).get("hosting")
+        else "No (Residencial)"
+    )
 
     respuesta = (
         f"DOSSIER OSINT DE IP\n"
@@ -84,7 +96,12 @@ def consultar_ip(message):
         f"- Moneda oficial: {moneda}\n\n"
         f"3. RED E INFRAESTRUCTURA:\n"
         f"- Proveedor / ISP: {isp}\n"
-        f"- Sistema Autónomo: {asn}"
+        f"- Organización: {org}\n"
+        f"- Sistema Autónomo (ASN): {asn}\n"
+        f"- Tipo de Red: {conexion_tipo}\n\n"
+        f"4. SEGURIDAD:\n"
+        f"- Estado VPN/Proxy: {seguridad_vpn}\n"
+        f"- Infraestructura: {seguridad_hosting}"
     )
 
     bot.reply_to(message, respuesta)
