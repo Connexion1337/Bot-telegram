@@ -20,7 +20,7 @@ def home():
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   nombre = message.from_user.first_name
-  texto_bienvenida = f"👋 **¡Hola, {nombre}! Bienvenido al bot.**\n\nPronto tendra mas funciones sobre cada pais Arg,peru etc,usa /menu para ver los comandos disponibles."
+  texto_bienvenida = f"👋 **¡Hola, {nombre}! Bienvenido al bot.**\n\nPronto tendremos mas funciones sobre cada pais Arg,peru etc,usa /menu para ver los comandos disponibles."
   bot.reply_to(message, texto_bienvenida, parse_mode="Markdown")
 
 
@@ -67,33 +67,34 @@ def consultar_ip(message):
     abuse = data.get("abuse", {})
 
     respuesta = (
-        f"🕵️‍♂️ **DOSSIER OSINT COMPLETO DE IP:** `{ip_objetivo}`\n\n"
-        f"🌍 **UBICACIÓN GEOGRÁFICA:**\n"
-        f"🏳️ **País:** {ubicacion.get('country', 'N/A')} ({ubicacion.get('country_code', 'N/A')})\n"
-        f"🏙️ **Estado / Región:** {ubicacion.get('state', 'N/A')}\n"
-        f"🏘️ **Ciudad:** {ubicacion.get('city', 'N/A')}\n"
-        f"📮 **Código Postal:** {ubicacion.get('zip', 'N/A')}\n"
-        f"⏰ **Zona Horaria:** {ubicacion.get('timezone', 'N/A')}\n"
-        f"📍 **Coordenadas:** {ubicacion.get('latitude', 'N/A')}, {ubicacion.get('longitude', 'N/A')}\n"
-        f"☀️ **¿Es de día/noche?:** {'Noche 🌙' if ubicacion.get('is_dst') else 'Día ☀️'}\n\n"
-        f"🏢 **INFRAESTRUCTURA Y RED:**\n"
-        f"📡 **Nombre de la Compañía:** {empresa.get('name', 'N/A')}\n"
-        f"🌐 **Dominio Web:** {empresa.get('domain', 'N/A')}\n"
-        f"🔌 **Tipo de Red (Route):** {asn.get('route', 'N/A')}\n"
-        f"🔢 **ASN (Autonomous System):** AS{asn.get('asn', 'N/A')}\n"
-        f"🏛️ **Organización del AS:** {asn.get('org', 'N/A')}\n\n"
-        f"🛡️ **SEGURIDAD Y ANONIMATO:**\n"
-        f"🔹 **¿Es VPN?:** {'Sí ⚠️' if tipo_red.get('vpn') else 'No ✅'}\n"
-        f"🔹 **¿Es Proxy?:** {'Sí ⚠️' if tipo_red.get('proxy') else 'No ✅'}\n"
-        f"🔹 **¿Es Red Tor?:** {'Sí ⚠️' if tipo_red.get('tor') else 'No ✅'}\n"
-        f"🔹 **¿Es Datacenter / Hosting?:** {'Sí (Servidor Cloud)' if tipo_red.get('datacenter') else 'No (Conexión Residencial/Móvil)'}\n"
-        f"🔹 **¿Es Abusiva / Reportada?:** {'Sí 🚨' if tipo_red.get('abuser') else 'No (Limpia) ✅'}\n\n"
-        f"📞 **CONTACTO DE ABUSOS (ISP):**\n"
-        f"📧 **Email:** {abuse.get('email', 'N/A')}\n"
-        f"☎️ **Teléfono:** {abuse.get('phone', 'N/A')}"
+        f"🕵️‍♂️ DOSSIER OSINT COMPLETO DE IP: {ip_objetivo}\n\n"
+        f"🌍 UBICACIÓN GEOGRÁFICA:\n"
+        f"🏳️ País: {ubicacion.get('country', 'N/A')} ({ubicacion.get('country_code', 'N/A')})\n"
+        f"🏙️ Estado / Región: {ubicacion.get('state', 'N/A')}\n"
+        f"🏘️ Ciudad: {ubicacion.get('city', 'N/A')}\n"
+        f"📮 Código Postal: {ubicacion.get('zip', 'N/A')}\n"
+        f"⏰ Zona Horaria: {ubicacion.get('timezone', 'N/A')}\n"
+        f"📍 Coordenadas: {ubicacion.get('latitude', 'N/A')}, {ubicacion.get('longitude', 'N/A')}\n"
+        f"☀️ ¿Es de día/noche?: {'Noche 🌙' if ubicacion.get('is_dst') else 'Día ☀️'}\n\n"
+        f"🏢 INFRAESTRUCTURA Y RED:\n"
+        f"📡 Nombre de la Compañía: {empresa.get('name', 'N/A')}\n"
+        f"🌐 Dominio Web: {empresa.get('domain', 'N/A')}\n"
+        f"🔌 Tipo de Red (Route): {asn.get('route', 'N/A')}\n"
+        f"🔢 ASN (Autonomous System): AS{asn.get('asn', 'N/A')}\n"
+        f"🏛️ Organización del AS: {asn.get('org', 'N/A')}\n\n"
+        f"🛡️ SEGURIDAD Y ANONIMATO:\n"
+        f"🔹 ¿Es VPN?: {'Sí ⚠️' if tipo_red.get('vpn') else 'No ✅'}\n"
+        f"🔹 ¿Es Proxy?: {'Sí ⚠️' if tipo_red.get('proxy') else 'No ✅'}\n"
+        f"🔹 ¿Es Red Tor?: {'Sí ⚠️' if tipo_red.get('tor') else 'No ✅'}\n"
+        f"🔹 ¿Es Datacenter / Hosting?: {'Sí (Servidor Cloud)' if tipo_red.get('datacenter') else 'No (Conexión Residencial/Móvil)'}\n"
+        f"🔹 ¿Es Abusiva / Reportada?: {'Sí 🚨' if tipo_red.get('abuser') else 'No (Limpia) ✅'}\n\n"
+        f"📞 CONTACTO DE ABUSOS (ISP):\n"
+        f"📧 Email: {abuse.get('email', 'N/A')}\n"
+        f"☎️ Teléfono: {abuse.get('phone', 'N/A')}"
     )
 
-    bot.reply_to(message, respuesta, parse_mode="Markdown")
+    # Enviado sin parse_mode para evitar errores de sintaxis de Telegram
+    bot.reply_to(message, respuesta)
 
   except Exception as e:
     bot.reply_to(message, f"❌ Ocurrió un error al consultar la IP: {str(e)}")
@@ -109,3 +110,4 @@ if __name__ == "__main__":
 
   port = int(os.environ.get("PORT", 5000))
   app.run(host="0.0.0.0", port=port)
+
