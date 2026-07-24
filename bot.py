@@ -1,9 +1,12 @@
-import telebot
-import requests
+from flask import Flask
 import os
+import requests
+import telebot
 import threading
 
-TOKEN ="8785982545:AAGdwcIwX11tyBu4ccmuzaMFGS5fRuTt3bc"
+app = Flask(__name__)
+
+TOKEN = "8785982545:AAGdwcIWX11tyBu4ccmuzaMFG5FruTt3bc"
 bot = telebot.TeleBot(TOKEN)
 
 
